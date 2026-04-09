@@ -5,8 +5,9 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::Write;
+use std::path::Path;
 
 #[derive(Deserialize, Serialize, Debug)]
 struct DatosSensor {
@@ -17,13 +18,17 @@ struct DatosSensor {
 
 #[tokio::main]
 async fn main() {
-    if !std::path::Path::new("datos.csv").exists() {
-        let mut file = OpenOptions::new().create(true).write(true).open("datos.csv").unwrap();
+    if !Path::new("data").exists() {
+        fs::create_dir_all("data").unwrap();
+    }
+
+    if !Path::new("data/datos.csv").exists() {
+        let mut file = OpenOptions::new().create(true).write(true).open("data/datos.csv").unwrap();
         writeln!(file, "Timestamp,Sensor,Valor").unwrap();
     }
 
     let app = Router::new()
-        .route("/", get(pagina_principal))        
+        .route("/", get(pagina_principal))
         .route("/datos", post(recibir_datos))
         .route("/api/datos", get(obtener_csv));
 
@@ -33,11 +38,10 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-// Recibe el JSON, lo convierte a CSV y lo guarda
 async fn recibir_datos(Json(payload): Json<DatosSensor>) -> String {
     let valor_numerico = if payload.estado == "oprimido" { 1 } else { 0 };
     
-    let mut file = OpenOptions::new().append(true).open("datos.csv").unwrap();
+    let mut file = OpenOptions::new().append(true).open("data/datos.csv").unwrap();
     writeln!(file, "{},{},{}", payload.timestamp, payload.sensor, valor_numerico).unwrap();
     
     println!("Guardado: {} -> {}", payload.sensor, payload.estado);
@@ -45,11 +49,11 @@ async fn recibir_datos(Json(payload): Json<DatosSensor>) -> String {
 }
 
 async fn pagina_principal() -> impl IntoResponse {
-    let contenido = std::fs::read_to_string("index.html").unwrap_or_else(|_| "<h1>Error: Archivo index.html no encontrado</h1>".to_string());
+    let contenido = fs::read_to_string("public/index.html")
+        .unwrap_or_else(|_| "<h1>Error: Archivo public/index.html no encontrado</h1>".to_string());
     Html(contenido)
 }
 
-
 async fn obtener_csv() -> impl IntoResponse {
-    std::fs::read_to_string("datos.csv").unwrap_or_default()
+    fs::read_to_string("data/datos.csv").unwrap_or_default()
 }
