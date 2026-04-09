@@ -1,37 +1,26 @@
-import json
+import requests
 from gpiozero import LED, Button
 from signal import pause
 from datetime import datetime
 
-# Configuración de archivos y hardware
-LOG_FILE = "registro_led.json"
+# Configuración de hardware y red
+URL_SERVIDOR = "http://localhost:3000/datos"
 led = LED(17)
 button = Button(2)
 
 def registrar_evento(accion):
-    # Creamos la entrada con la fecha y hora actual
     nuevo_registro = {
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "evento": accion
+        "sensor": "boton_1",
+        "estado": accion,
+        "timestamp": datetime.now().timestamp()
     }
     
     try:
-        # Intentamos leer el archivo existente
-        with open(LOG_FILE, "r") as file:
-            datos = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # Si no existe o está vacío, empezamos una lista nueva
-        datos = []
+        respuesta = requests.post(URL_SERVIDOR, json=nuevo_registro)
+        print(f"Registrado en servidor: {accion} (Status: {respuesta.status_code})")
+    except Exception as e:
+        print(f"Error conectando con el servidor: {e}")
 
-    # Añadimos el nuevo registro y guardamos
-    datos.append(nuevo_registro)
-    
-    with open(LOG_FILE, "w") as file:
-        json.dump(datos, file, indent=4)
-    
-    print(f"Registrado: {accion}")
-
-# Funciones de envoltura para los eventos
 def led_on():
     led.on()
     registrar_evento("oprimido")
@@ -40,9 +29,8 @@ def led_off():
     led.off()
     registrar_evento("soltado")
 
-# Asignación de eventos
 button.when_pressed = led_on
 button.when_released = led_off
 
-print("Sistema listo. Presiona el botón...")
+print("Sistema cliente listo.")
 pause()
