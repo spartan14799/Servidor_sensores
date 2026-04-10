@@ -39,6 +39,7 @@ pub fn ejecutar_panel_control() -> Result<(), io::Error> {
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     loop {
+        app.actualizar_metricas();
         terminal.draw(|f| dibujar_interfaz(f, app))?;
 
         if event::poll(Duration::from_millis(250))? {

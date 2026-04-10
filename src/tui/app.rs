@@ -1,6 +1,7 @@
 // src/tui/app.rs
 use serde::{Deserialize, Serialize};
 use std::fs;
+use sysinfo::System;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct InfoIp {
@@ -30,17 +31,27 @@ pub struct App {
     pub baneadas: Vec<InfoIp>,
     pub conocidas: Vec<InfoIp>,
     pub seleccion_indice: usize, 
+    pub sistema: System,
+    pub uso_cpu: u16,
+    pub uso_ram: u16,
+    pub visitantes_activos: u32,
 }
 
 impl App {
     pub fn new() -> App {
+        let mut sistema = System::new_all();
+        sistema.refresh_all();
         let mut app = App {
-            pestana_actual: PestañaActiva::Sensores,
+            pestana_actual: PestañaActiva::Dashboard,
             input_mode: InputMode::Normal,
             input: String::new(),
             baneadas: Vec::new(),
             conocidas: Vec::new(),
             seleccion_indice: 0,
+            sistema,
+            uso_cpu: 0,
+            uso_ram: 0,
+            visitantes_activos: 12 //prueba
         };
         app.cargar_de_json();
         app
@@ -77,5 +88,20 @@ impl App {
             self.input_mode = InputMode::Normal;
             self.guardar_a_json();
         }
+    }
+    pub fn actualizar_metricas(&mut self) {
+        self.sistema.refresh_cpu_usage();
+        self.sistema.refresh_memory();
+
+        // Calcular CPU global
+        let uso_total_cpu: f32 = self.sistema.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
+        let cpu_promedio = uso_total_cpu / self.sistema.cpus().len() as f32;
+        self.uso_cpu = cpu_promedio.round() as u16;
+
+        // Calcular RAM
+        let ram_total = self.sistema.total_memory() as f64;
+        let ram_usada = self.sistema.used_memory() as f64;
+        self.uso_ram = ((ram_usada / ram_total) * 100.0).round() as u16;
+
     }
 }
