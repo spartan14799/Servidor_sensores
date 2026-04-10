@@ -32,6 +32,6 @@ python launcher.py --tipo [TIPO] --pin [PIN] --id [NOMBRE_ID] --ip [IP_SERVIDOR]
 ```
 Ejemplo de uso:
 ```Bash
-python lanzador.py --tipo boton --pin 2 --id "boton_sala" --ip "192.168.1.50"
+python launcher.py --tipo boton --pin 2 --id "boton_sala" --ip "127.0 0.1"
 ```
 ## 📁 Estructura de Archivos Clave
