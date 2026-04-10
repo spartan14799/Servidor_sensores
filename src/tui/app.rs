@@ -16,7 +16,15 @@ pub enum InputMode {
     EditingInfo,
 }
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum PestañaActiva {
+    Dashboard,
+    Sensores,
+    Ajustes,
+}
+
 pub struct App {
+    pub pestana_actual: PestañaActiva,
     pub input_mode: InputMode,
     pub input: String,
     pub baneadas: Vec<InfoIp>,
@@ -27,6 +35,7 @@ pub struct App {
 impl App {
     pub fn new() -> App {
         let mut app = App {
+            pestana_actual: PestañaActiva::Sensores,
             input_mode: InputMode::Normal,
             input: String::new(),
             baneadas: Vec::new(),
@@ -45,7 +54,7 @@ impl App {
         fs::write("config.json", data.to_string()).expect("No se pudo guardar el JSON");
     }
 
-    fn cargar_de_json(&mut self) {
+    pub fn cargar_de_json(&mut self) {
         if let Ok(contenido) = fs::read_to_string("config.json") {
             let v: serde_json::Value = serde_json::from_str(&contenido).unwrap_or_default();
             if let Some(b) = v.get("baneadas") {
@@ -61,12 +70,12 @@ impl App {
         if !self.input.is_empty() {
             self.baneadas.push(InfoIp {
                 ip: self.input.clone(),
-                nombre: "Nueva IP".into(),
-                info: "Sin descripción".into(),
+                nombre: "Desconocido".to_string(),
+                info: "Sin descripción".to_string(),
             });
             self.input.clear();
+            self.input_mode = InputMode::Normal;
             self.guardar_a_json();
         }
-        self.input_mode = InputMode::Normal;
     }
 }
