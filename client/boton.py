@@ -19,8 +19,6 @@ class SensorBoton(SensorBase):
         self.enviar_dato("pulsacion", 0.0)
 
     def iniciar_lectura(self):
-        print(f"[{self.id_sensor}] Escuchando eventos en el GPIO {self.pin}...")
-        
         self.boton.when_pressed = self.al_presionar
         self.boton.when_released = self.al_soltar
         

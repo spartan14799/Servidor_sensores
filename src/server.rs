@@ -1,76 +1,76 @@
-
 use axum::{
+    extract::{ConnectInfo, State, Json},
+    response::{Html, IntoResponse},
     routing::{get, post},
-    Router, Json, response::{Html, IntoResponse},
+    Router,
 };
-use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::Path;
-use std::env;
+use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+use std::collections::HashSet;
+use serde::{Deserialize, Serialize};
 use dotenvy::dotenv;
+use std::env;
 
 #[derive(Deserialize, Serialize, Debug)]
-struct DatosSensor {
-    id_sensor: String,
-    medicion: String,
-    valor: f64,
-    timestamp: f64,
+pub struct DatosSensor {
+    pub id_sensor: String,
+    pub medicion: String,
+    pub valor: f64,
+    pub timestamp: f64,
 }
 
-
-pub async fn iniciar_servidor() {
+pub async fn iniciar_servidor(activos: Arc<Mutex<HashSet<String>>>) {
     let _ = dotenv();
     
     let ip = env::var("IP_SERVIDOR").unwrap_or_else(|_| "0.0.0.0".to_string());
     let puerto = env::var("PUERTO_SERVIDOR").unwrap_or_else(|_| "3000".to_string());
+
+    let ruta_csv = "./data/datos.csv"; 
     
-    if !Path::new("data").exists() { fs::create_dir_all("data").unwrap(); }
-    if !Path::new("data/datos.csv").exists() {
-        let mut file = OpenOptions::new().create(true).write(true).open("data/datos.csv").unwrap();
-        writeln!(file, "Timestamp,Sensor,Medicion,Valor").unwrap();
+    if !std::path::Path::new(ruta_csv).exists() {
+        let mut file = OpenOptions::new().create(true).write(true).open(ruta_csv).unwrap();
+        writeln!(file, "Timestamp,Sensor,Medicion,Valor,IP_Origen").unwrap();
     }
 
     let app = Router::new()
         .route("/", get(pagina_principal))
         .route("/datos", post(recibir_datos))
-        .route("/api/datos", get(obtener_csv));
+        .route("/api/datos", get(obtener_csv))
+        .with_state(activos);
 
     let direccion = format!("{}:{}", ip, puerto);
-    let listener = tokio::net::TcpListener::bind(&direccion).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&direccion).await.expect("Error: Puerto 3000 ocupado");
     
-    println!("\n Servidor web corriendo exitosamente en http://{}", direccion);
-    println!("Presiona Ctrl+C para detenerlo.\n");
-    
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }
 
+async fn recibir_datos(
+    State(activos): State<Arc<Mutex<HashSet<String>>>>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>, 
+    Json(payload): Json<DatosSensor>
+) -> String {
+    let ip_cliente = addr.ip().to_string();
+    activos.lock().unwrap().insert(ip_cliente.clone());
 
-// POST /datos: Recibe la información de Python y la guarda
-async fn recibir_datos(Json(payload): Json<DatosSensor>) -> String {
-    let mut file = OpenOptions::new().append(true).open("data/datos.csv").unwrap();
-    
-    // Guardamos las 4 columnas
+    let mut file = OpenOptions::new().append(true).open("./data/datos.csv").unwrap();
     writeln!(
-        file, 
-        "{},{},{},{}", 
-        payload.timestamp, 
-        payload.id_sensor, 
-        payload.medicion, 
-        payload.valor
+        file, "{},{},{},{},{}", 
+        payload.timestamp, payload.id_sensor, payload.medicion, payload.valor, ip_cliente
     ).unwrap();
     
-    //println!("Guardado: {} [{}] -> {}", payload.id_sensor, payload.medicion, payload.valor);
-    format!("Datos de {} guardados exitosamente", payload.medicion)
-}
-// GET /: Entrega tu Dashboard en HTML
-async fn pagina_principal() -> impl IntoResponse {
-    let contenido = fs::read_to_string("public/index.html")
-        .unwrap_or_else(|_| "<h1>Error: Archivo public/index.html no encontrado</h1>".to_string());
-    Html(contenido)
+    format!("OK desde {}", ip_cliente)
 }
 
-// GET /api/datos: Permite que el Dashboard descargue el CSV para graficar
+async fn pagina_principal() -> impl IntoResponse {
+    // Buscamos el HTML en la raíz/public/index.html
+    match fs::read_to_string("./public/index.html") {
+        Ok(html) => Html(html),
+        Err(_) => Html("<h1>404: No se encontró public/index.html</h1>".to_string()),
+    }
+}
+
 async fn obtener_csv() -> impl IntoResponse {
-    fs::read_to_string("data/datos.csv").unwrap_or_default()
+    fs::read_to_string("./data/datos.csv").unwrap_or_default()
 }

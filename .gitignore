@@ -209,3 +209,17 @@ __marimo__/
 
 data/datos.csv
 .json
+
+# Datos y Configuración
+data.csv
+config.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+
+# Rust (Target)
+target/
