@@ -1,4 +1,4 @@
-### IoT Sensor Monitoring System 🚀
+# IoT Sensor Monitoring System 🚀
 
 Este proyecto es un ecosistema de monitoreo de sensores que combina un backend robusto en Rust, una interfaz de terminal (TUI) para configuración y nodos clientes en Python para la captura de datos.
 
