@@ -1,7 +1,8 @@
-// src/tui/app.rs
 use serde::{Deserialize, Serialize};
 use std::fs;
 use sysinfo::System;
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct InfoIp {
@@ -31,15 +32,21 @@ pub struct App {
     pub baneadas: Vec<InfoIp>,
     pub conocidas: Vec<InfoIp>,
     pub seleccion_indice: usize, 
+    
     pub sistema: System,
     pub uso_cpu: u16,
     pub uso_ram: u16,
+    pub sensores_activos: Arc<Mutex<HashSet<String>>>,
+
+    pub dashboard_seleccion_indice: usize,
+    pub ip_en_edicion: String,
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new(activos: Arc<Mutex<HashSet<String>>>) -> App {
         let mut sistema = System::new_all();
         sistema.refresh_all();
+
         let mut app = App {
             pestana_actual: PestañaActiva::Dashboard,
             input_mode: InputMode::Normal,
@@ -50,9 +57,25 @@ impl App {
             sistema,
             uso_cpu: 0,
             uso_ram: 0,
+            sensores_activos: activos,
+            dashboard_seleccion_indice: 0,
+            ip_en_edicion: String::new(),
         };
         app.cargar_de_json();
         app
+    }
+
+    pub fn actualizar_metricas(&mut self) {
+        self.sistema.refresh_cpu_usage();
+        self.sistema.refresh_memory();
+
+        let uso_total_cpu: f32 = self.sistema.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
+        let cpu_promedio = uso_total_cpu / self.sistema.cpus().len() as f32;
+        self.uso_cpu = cpu_promedio.round() as u16;
+
+        let ram_total = self.sistema.total_memory() as f64;
+        let ram_usada = self.sistema.used_memory() as f64;
+        self.uso_ram = ((ram_usada / ram_total) * 100.0).round() as u16;
     }
 
     pub fn guardar_a_json(&self) {
@@ -87,19 +110,24 @@ impl App {
             self.guardar_a_json();
         }
     }
-    pub fn actualizar_metricas(&mut self) {
-        self.sistema.refresh_cpu_usage();
-        self.sistema.refresh_memory();
-
-        // Calcular CPU global
-        let uso_total_cpu: f32 = self.sistema.cpus().iter().map(|cpu| cpu.cpu_usage()).sum();
-        let cpu_promedio = uso_total_cpu / self.sistema.cpus().len() as f32;
-        self.uso_cpu = cpu_promedio.round() as u16;
-
-        // Calcular RAM
-        let ram_total = self.sistema.total_memory() as f64;
-        let ram_usada = self.sistema.used_memory() as f64;
-        self.uso_ram = ((ram_usada / ram_total) * 100.0).round() as u16;
-
+    
+    pub fn actualizar_nombre_conocida(&mut self, ip: String, nuevo_nombre: String) {
+        let mut encontrada = false;
+        for conocida in &mut self.conocidas {
+            if conocida.ip == ip {
+                conocida.nombre = nuevo_nombre.clone();
+                encontrada = true;
+                break;
+            }
+        }
+        
+        if !encontrada {
+            self.conocidas.push(InfoIp {
+                ip,
+                nombre: nuevo_nombre,
+                info: "Dispositivo guardado".to_string(),
+            });
+        }
+        self.guardar_a_json();
     }
 }
