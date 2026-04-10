@@ -34,7 +34,6 @@ pub struct App {
     pub sistema: System,
     pub uso_cpu: u16,
     pub uso_ram: u16,
-    pub visitantes_activos: u32,
 }
 
 impl App {
@@ -51,7 +50,6 @@ impl App {
             sistema,
             uso_cpu: 0,
             uso_ram: 0,
-            visitantes_activos: 12 //prueba
         };
         app.cargar_de_json();
         app
