@@ -119,7 +119,7 @@
 
           lineas.forEach((linea) => {
             if (!linea) return;
-            const [timestamp, sensor, valorStr] = linea.split(",");
+		const [timestamp, sensor, medicion, valorStr] = linea.split(",");
             const valor = parseInt(valorStr);
             const fecha = new Date(parseFloat(timestamp) * 1000);
 
