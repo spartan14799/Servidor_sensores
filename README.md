@@ -1,17 +1,21 @@
 ### IoT Sensor Monitoring System 🚀
+
 Este proyecto es un ecosistema de monitoreo de sensores que combina un backend robusto en Rust, una interfaz de terminal (TUI) para configuración y nodos clientes en Python para la captura de datos.
+
 ## 📋 Requisitos Previos
+
 -  Rust (Cargo) instalado.
 - Python 3.x instalado.
 - Librerías de Python: requests (puedes instalarla con pip install requests).
 
 ### 🛠️ Ejecución del Sistema
-El sistema se divide en tres componentes principales. Sigue este orden para una ejecución correcta:
+
+El sistema se divide en tres componentes principales. Sigue este orden para una ejecución correcta
 
 1. El Servidor (Backend Rust)Es el corazón del sistema. Recibe los datos de los sensores, los guarda en un CSV y sirve el Dashboard web.
-   ```Bash
-   cargo run
-   ```
+```Bash
+cargo run
+```
 Por defecto, el servidor escuchará en el puerto 3000.
 
 2. Modo Configuración (TUI Rust)
@@ -28,4 +32,4 @@ Ejemplo de uso:
 ```Bash
 python lanzador.py --tipo boton --pin 2 --id "boton_sala" --ip "192.168.1.50"
 ```
-##📁 Estructura de Archivos Clave
+## 📁 Estructura de Archivos Clave
