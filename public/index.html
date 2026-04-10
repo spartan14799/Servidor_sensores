@@ -1,190 +1,275 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard de Sensores</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; }
-        .contenedor-graficas { display: flex; flex-direction: column; gap: 40px; align-items: center; }
-        .tarjeta { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 80%; max-width: 800px; }
-        .controles { margin-bottom: 20px; padding: 15px; background: #e0e0e0; border-radius: 8px; display: inline-block; }
-        input[type="date"] { padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f9;
+        padding: 20px;
+      }
+      .contenedor-graficas {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        align-items: center;
+      }
+      .tarjeta {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 800px;
+      }
+      .controles {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #e0e0e0;
+        border-radius: 8px;
+        display: inline-block;
+      }
+      input[type="date"] {
+        padding: 8px;
+        font-size: 16px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <h1>Monitoreo del Botón</h1>
-    
+
     <div class="controles">
-        <label for="fechaFiltro"><strong>Ver datos del día: </strong></label>
-        <input type="date" id="fechaFiltro" onchange="cargarDatos()">
+      <label for="fechaFiltro"><strong>Ver datos del día: </strong></label>
+      <input type="date" id="fechaFiltro" onchange="cargarDatos()" />
     </div>
-    
+
     <div class="contenedor-graficas">
-        <div class="tarjeta">
-            <h3 id="tituloDiario">Pulsaciones por Hora</h3>
-            <canvas id="chartDiario"></canvas>
-        </div>
+      <div class="tarjeta">
+        <h3 id="tituloDiario">Pulsaciones por Hora</h3>
+        <canvas id="chartDiario"></canvas>
+      </div>
 
-        <div class="tarjeta">
-            <h3>Pulsaciones por Día (Mes Actual)</h3>
-            <canvas id="chartMensual"></canvas>
-        </div>
+      <div class="tarjeta">
+        <h3>Pulsaciones por Día (Mes Actual)</h3>
+        <canvas id="chartMensual"></canvas>
+      </div>
 
-        <div class="tarjeta">
-            <h3>Pulsaciones por Mes (Año Actual)</h3>
-            <canvas id="chartAnual"></canvas>
-        </div>
+      <div class="tarjeta">
+        <h3>Pulsaciones por Mes (Año Actual)</h3>
+        <canvas id="chartAnual"></canvas>
+      </div>
     </div>
 
     <script>
-        let chartDiario, chartMensual, chartAnual;
+      let chartDiario, chartMensual, chartAnual;
 
-        // Establecer la fecha de hoy por defecto al cargar la página
-        document.addEventListener("DOMContentLoaded", () => {
-            const hoy = new Date();
-            // Formatear a YYYY-MM-DD para el input type="date"
-            const anio = hoy.getFullYear();
-            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-            const dia = String(hoy.getDate()).padStart(2, '0');
-            document.getElementById('fechaFiltro').value = `${anio}-${mes}-${dia}`;
-            
-            cargarDatos();
-            // Auto-actualización cada 2 segundos
-            setInterval(cargarDatos, 2000);
-        });
+      // Establecer la fecha de hoy por defecto al cargar la página
+      document.addEventListener("DOMContentLoaded", () => {
+        const hoy = new Date();
+        // Formatear a YYYY-MM-DD para el input type="date"
+        const anio = hoy.getFullYear();
+        const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+        const dia = String(hoy.getDate()).padStart(2, "0");
+        document.getElementById("fechaFiltro").value = `${anio}-${mes}-${dia}`;
 
-        async function cargarDatos() {
-            try {
-                const respuesta = await fetch('/api/datos');
-                const csv = await respuesta.text();
-                const lineas = csv.trim().split('\n').slice(1);
+        cargarDatos();
+        // Auto-actualización cada 2 segundos
+        setInterval(cargarDatos, 2000);
+      });
 
-                const ahora = new Date();
-                const mesActual = ahora.getMonth();
-                const anioActual = ahora.getFullYear();
-                
-                // Obtener la fecha que el usuario seleccionó en el input
-                const fechaSeleccionada = document.getElementById('fechaFiltro').value;
+      async function cargarDatos() {
+        try {
+          const respuesta = await fetch("/api/datos");
+          const csv = await respuesta.text();
+          const lineas = csv.trim().split("\n").slice(1);
 
-                // Estructuras para agrupar nuestros datos
-                let conteoPorHora = new Array(24).fill(0); // Arreglo de 24 ceros (0 a 23 hrs)
-                let conteoPorDia = {};
-                let conteoPorMes = {};
+          const ahora = new Date();
+          const mesActual = ahora.getMonth();
+          const anioActual = ahora.getFullYear();
 
-                const nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+          // Obtener la fecha que el usuario seleccionó en el input
+          const fechaSeleccionada =
+            document.getElementById("fechaFiltro").value;
 
-                lineas.forEach(linea => {
-                    if (!linea) return;
-                    const [timestamp, sensor, valorStr] = linea.split(',');
-                    const valor = parseInt(valorStr);
-                    const fecha = new Date(parseFloat(timestamp) * 1000);
+          // Estructuras para agrupar nuestros datos
+          let conteoPorHora = new Array(24).fill(0); // Arreglo de 24 ceros (0 a 23 hrs)
+          let conteoPorDia = {};
+          let conteoPorMes = {};
 
-                    // Formatear la fecha del CSV a YYYY-MM-DD para comparar con el filtro
-                    const anioCSV = fecha.getFullYear();
-                    const mesCSV = String(fecha.getMonth() + 1).padStart(2, '0');
-                    const diaCSV = String(fecha.getDate()).padStart(2, '0');
-                    const fechaCSVStr = `${anioCSV}-${mesCSV}-${diaCSV}`;
+          const nombresMeses = [
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Jul",
+            "Ago",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dic",
+          ];
 
-                    // Solo contamos pulsaciones (valor === 1)
-                    if (valor === 1) {
-                        // 1. Datos para la gráfica DIARIA (Agrupamos por hora si la fecha coincide con el filtro)
-                        if (fechaCSVStr === fechaSeleccionada) {
-                            const hora = fecha.getHours();
-                            conteoPorHora[hora]++;
-                        }
+          lineas.forEach((linea) => {
+            if (!linea) return;
+            const [timestamp, sensor, valorStr] = linea.split(",");
+            const valor = parseInt(valorStr);
+            const fecha = new Date(parseFloat(timestamp) * 1000);
 
-                        // 2. Datos para la gráfica MENSUAL (Agrupamos por día del mes actual)
-                        if (fecha.getMonth() === mesActual && fecha.getFullYear() === anioActual) {
-                            const dia = fecha.getDate().toString();
-                            conteoPorDia[dia] = (conteoPorDia[dia] || 0) + 1;
-                        }
+            // Formatear la fecha del CSV a YYYY-MM-DD para comparar con el filtro
+            const anioCSV = fecha.getFullYear();
+            const mesCSV = String(fecha.getMonth() + 1).padStart(2, "0");
+            const diaCSV = String(fecha.getDate()).padStart(2, "0");
+            const fechaCSVStr = `${anioCSV}-${mesCSV}-${diaCSV}`;
 
-                        // 3. Datos para la gráfica ANUAL (Agrupamos por mes del año actual)
-                        if (fecha.getFullYear() === anioActual) {
-                            const nombreMes = nombresMeses[fecha.getMonth()];
-                            conteoPorMes[nombreMes] = (conteoPorMes[nombreMes] || 0) + 1;
-                        }
-                    }
-                });
+            // Solo contamos pulsaciones (valor === 1)
+            if (valor === 1) {
+              // 1. Datos para la gráfica DIARIA (Agrupamos por hora si la fecha coincide con el filtro)
+              if (fechaCSVStr === fechaSeleccionada) {
+                const hora = fecha.getHours();
+                conteoPorHora[hora]++;
+              }
 
-                // Actualizar título de la gráfica diaria
-                document.getElementById('tituloDiario').innerText = `Pulsaciones por Hora (${fechaSeleccionada})`;
+              // 2. Datos para la gráfica MENSUAL (Agrupamos por día del mes actual)
+              if (
+                fecha.getMonth() === mesActual &&
+                fecha.getFullYear() === anioActual
+              ) {
+                const dia = fecha.getDate().toString();
+                conteoPorDia[dia] = (conteoPorDia[dia] || 0) + 1;
+              }
 
-                dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes);
-
-            } catch (error) {
-                console.error("Error cargando los datos:", error);
+              // 3. Datos para la gráfica ANUAL (Agrupamos por mes del año actual)
+              if (fecha.getFullYear() === anioActual) {
+                const nombreMes = nombresMeses[fecha.getMonth()];
+                conteoPorMes[nombreMes] = (conteoPorMes[nombreMes] || 0) + 1;
+              }
             }
+          });
+
+          // Actualizar título de la gráfica diaria
+          document.getElementById("tituloDiario").innerText =
+            `Pulsaciones por Hora (${fechaSeleccionada})`;
+
+          dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes);
+        } catch (error) {
+          console.error("Error cargando los datos:", error);
+        }
+      }
+
+      function dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes) {
+        // Etiquetas para las 24 horas del día (00:00, 01:00... 23:00)
+        const etiquetasHoras = Array.from(
+          { length: 24 },
+          (_, i) => `${String(i).padStart(2, "0")}:00`,
+        );
+
+        // --- GRÁFICA DIARIA POR HORA ---
+        if (chartDiario) {
+          chartDiario.data.labels = etiquetasHoras;
+          chartDiario.data.datasets[0].data = conteoPorHora;
+          chartDiario.update();
+        } else {
+          const ctxD = document.getElementById("chartDiario").getContext("2d");
+          chartDiario = new Chart(ctxD, {
+            type: "bar",
+            data: {
+              labels: etiquetasHoras,
+              datasets: [
+                {
+                  label: "Pulsaciones en la hora",
+                  data: conteoPorHora,
+                  backgroundColor: "#2196F3",
+                },
+              ],
+            },
+            options: {
+              animation: false,
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+          });
         }
 
-        function dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes) {
-            // Etiquetas para las 24 horas del día (00:00, 01:00... 23:00)
-            const etiquetasHoras = Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`);
-
-            // --- GRÁFICA DIARIA POR HORA ---
-            if (chartDiario) {
-                chartDiario.data.labels = etiquetasHoras;
-                chartDiario.data.datasets[0].data = conteoPorHora;
-                chartDiario.update();
-            } else {
-                const ctxD = document.getElementById('chartDiario').getContext('2d');
-                chartDiario = new Chart(ctxD, {
-                    type: 'bar',
-                    data: {
-                        labels: etiquetasHoras,
-                        datasets: [{
-                            label: 'Pulsaciones en la hora',
-                            data: conteoPorHora,
-                            backgroundColor: '#2196F3'
-                        }]
-                    },
-                    options: { animation: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-                });
-            }
-
-            // --- GRÁFICA MENSUAL ---
-            const etiquetasMes = Object.keys(conteoPorDia).sort((a,b) => a - b); // Ordenar días numéricamente
-            const datosMes = etiquetasMes.map(dia => conteoPorDia[dia]);
-            if (chartMensual) {
-                chartMensual.data.labels = etiquetasMes;
-                chartMensual.data.datasets[0].data = datosMes;
-                chartMensual.update();
-            } else {
-                const ctxM = document.getElementById('chartMensual').getContext('2d');
-                chartMensual = new Chart(ctxM, {
-                    type: 'bar',
-                    data: {
-                        labels: etiquetasMes,
-                        datasets: [{ label: 'Pulsaciones en el día', data: datosMes, backgroundColor: '#4CAF50' }]
-                    },
-                    options: { animation: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-                });
-            }
-
-            // --- GRÁFICA ANUAL ---
-            const mesesOrdenados = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-            const etiquetasAnio = Object.keys(conteoPorMes).sort((a, b) => mesesOrdenados.indexOf(a) - mesesOrdenados.indexOf(b));
-            const datosAnio = etiquetasAnio.map(mes => conteoPorMes[mes]);
-            
-            if (chartAnual) {
-                chartAnual.data.labels = etiquetasAnio;
-                chartAnual.data.datasets[0].data = datosAnio;
-                chartAnual.update();
-            } else {
-                const ctxA = document.getElementById('chartAnual').getContext('2d');
-                chartAnual = new Chart(ctxA, {
-                    type: 'bar',
-                    data: {
-                        labels: etiquetasAnio,
-                        datasets: [{ label: 'Pulsaciones en el mes', data: datosAnio, backgroundColor: '#FF9800' }]
-                    },
-                    options: { animation: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-                });
-            }
+        // --- GRÁFICA MENSUAL ---
+        const etiquetasMes = Object.keys(conteoPorDia).sort((a, b) => a - b); // Ordenar días numéricamente
+        const datosMes = etiquetasMes.map((dia) => conteoPorDia[dia]);
+        if (chartMensual) {
+          chartMensual.data.labels = etiquetasMes;
+          chartMensual.data.datasets[0].data = datosMes;
+          chartMensual.update();
+        } else {
+          const ctxM = document.getElementById("chartMensual").getContext("2d");
+          chartMensual = new Chart(ctxM, {
+            type: "bar",
+            data: {
+              labels: etiquetasMes,
+              datasets: [
+                {
+                  label: "Pulsaciones en el día",
+                  data: datosMes,
+                  backgroundColor: "#4CAF50",
+                },
+              ],
+            },
+            options: {
+              animation: false,
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+          });
         }
+
+        // --- GRÁFICA ANUAL ---
+        const mesesOrdenados = [
+          "Ene",
+          "Feb",
+          "Mar",
+          "Abr",
+          "May",
+          "Jun",
+          "Jul",
+          "Ago",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dic",
+        ];
+        const etiquetasAnio = Object.keys(conteoPorMes).sort(
+          (a, b) => mesesOrdenados.indexOf(a) - mesesOrdenados.indexOf(b),
+        );
+        const datosAnio = etiquetasAnio.map((mes) => conteoPorMes[mes]);
+
+        if (chartAnual) {
+          chartAnual.data.labels = etiquetasAnio;
+          chartAnual.data.datasets[0].data = datosAnio;
+          chartAnual.update();
+        } else {
+          const ctxA = document.getElementById("chartAnual").getContext("2d");
+          chartAnual = new Chart(ctxA, {
+            type: "bar",
+            data: {
+              labels: etiquetasAnio,
+              datasets: [
+                {
+                  label: "Pulsaciones en el mes",
+                  data: datosAnio,
+                  backgroundColor: "#FF9800",
+                },
+              ],
+            },
+            options: {
+              animation: false,
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            },
+          });
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -39,7 +39,11 @@ async fn main() {
 }
 
 async fn recibir_datos(Json(payload): Json<DatosSensor>) -> String {
-    let valor_numerico = if payload.estado == "oprimido" { 1 } else { 0 };
+    let valor_numerico: f64 = match payload.estado.as_str() {
+        "oprimido" => 1.0,
+        "soltado" => 0.0,
+        otro => otro.parse().unwrap_or(0.0), 
+    };
     
     let mut file = OpenOptions::new().append(true).open("data/datos.csv").unwrap();
     writeln!(file, "{},{},{}", payload.timestamp, payload.sensor, valor_numerico).unwrap();
