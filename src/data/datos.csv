@@ -1,5 +1,0 @@
-Timestamp,Sensor,Medicion,Valor,IP_Origen
-1775797561.632489,boton_test_local,pulsacion,1,127.0.0.1
-1775797561.993927,boton_test_local,pulsacion,0,127.0.0.1
-1775797563.493344,boton_test_local,pulsacion,1,127.0.0.1
-1775797565.372006,boton_test_local,pulsacion,0,127.0.0.1
