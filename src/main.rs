@@ -1,5 +1,7 @@
-mod setup;
-mod server;
+// src/main.rs
+
+mod server; 
+mod tui;    
 
 use std::env;
 
@@ -8,13 +10,13 @@ async fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() > 1 && args[1] == "config" {
-        println!("Abriendo el Panel de Control...");
-        if let Err(e) = setup::ejecutar_panel_control() {
-            eprintln!("Ocurrió un error al cargar la interfaz TUI: {}", e);
+        if let Err(e) = tui::ejecutar_panel_control() {
+            eprintln!("Ocurrió un error fatal en la interfaz TUI: {}", e);
         }
+        println!("Saliendo del panel de configuración.");
     } 
     else {
-        println!("Arrancando el Servidor IoT de forma automática...");
+        println!("Iniciando el motor web de Axum...");
         server::iniciar_servidor().await; 
     }
 }
