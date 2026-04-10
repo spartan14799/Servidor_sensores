@@ -24,9 +24,11 @@ Utiliza esta interfaz para gestionar los nombres de los sensores, ver las IPs co
 cargo run -- config
 ```
 3. Nodos Sensores (Cliente Python)El script de Python simula o lee un sensor físico y envía los datos al servidor.
-Se ejecuta usando el lanzador.py.Sintaxis:
+Se ejecuta usando el launcher.py
+
+Sintaxis:
 ```Bash
-python lanzador.py --tipo [TIPO] --pin [PIN] --id [NOMBRE_ID] --ip [IP_SERVIDOR]
+python launcher.py --tipo [TIPO] --pin [PIN] --id [NOMBRE_ID] --ip [IP_SERVIDOR]
 ```
 Ejemplo de uso:
 ```Bash
