@@ -91,18 +91,46 @@
           </div>
 
           <div class="row contenedor-graficas">
-            <div class="col-12">
+            
+            <div class="col-12 mb-4">
               <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                  <h5 class="card-title mb-0" id="tituloDiario">Actividad en Tiempo Real</h5>
+                  <h5 class="card-title mb-0" id="tituloDiario">Pulsaciones por Hora</h5>
                 </div>
                 <div class="card-body">
-                  <div class="position-relative" style="height: 50vh;">
+                  <div class="position-relative" style="height: 40vh;">
                     <canvas id="chartDiario"></canvas>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="card-title mb-0">Pulsaciones por Día (Mes Actual)</h5>
+                </div>
+                <div class="card-body">
+                  <div class="position-relative" style="height: 35vh;">
+                    <canvas id="chartMensual"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="card-title mb-0">Pulsaciones por Mes (Año Actual)</h5>
+                </div>
+                <div class="card-body">
+                  <div class="position-relative" style="height: 35vh;">
+                    <canvas id="chartAnual"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 
