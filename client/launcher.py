@@ -1,11 +1,12 @@
 import argparse
 from boton import SensorBoton
+from dht import SensorTempHumedad
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Lanzador de Sensores IoT")
     
     parser.add_argument("--tipo", type=str, required=True, 
-                        choices=['boton'],
+                        choices=['boton','dht'],
                         help="El tipo de sensor que deseas ejecutar")
     
     parser.add_argument("--pin", type=int, default=2, help="Pin BCM físico")
@@ -27,6 +28,9 @@ if __name__ == "__main__":
     
     if args.tipo == "boton":
         sensor = SensorBoton(id_sensor=args.id, pin=args.pin, ip_servidor=args.ip, puerto=args.puerto)
+    elif args.tipo == "dht":
+        sensor = SensorTempHumedad(id_sensor=args.id, pin=args.pin, ip_servidor=args.ip, puerto=args.puerto)
+
     
     if sensor:
         try:

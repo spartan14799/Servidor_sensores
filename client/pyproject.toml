@@ -1,0 +1,13 @@
+[project]
+name = "client"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "adafruit-circuitpython-dht>=4.0.11",
+    "gpiozero>=2.0.1",
+    "lgpio>=0.2.2.0",
+    "requests>=2.33.1",
+    "rpi-lgpio>=0.6",
+]
