@@ -1,6 +1,6 @@
 use axum::{
     extract::{ConnectInfo, State, Json},
-    response::{Html, IntoResponse},
+    response::IntoResponse,
     routing::{get, post},
     Router,
 };
@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use dotenvy::dotenv;
 use std::env;
+use tower_http::services::ServeDir;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DatosSensor {
@@ -30,18 +31,19 @@ pub async fn iniciar_servidor(activos: Arc<Mutex<HashSet<String>>>) {
     let ruta_csv = "./data/datos.csv"; 
     
     if !std::path::Path::new(ruta_csv).exists() {
+        let _ = fs::create_dir_all("./data");
         let mut file = OpenOptions::new().create(true).write(true).open(ruta_csv).unwrap();
         writeln!(file, "Timestamp,Sensor,Medicion,Valor,IP_Origen").unwrap();
     }
 
     let app = Router::new()
-        .route("/", get(pagina_principal))
         .route("/datos", post(recibir_datos))
         .route("/api/datos", get(obtener_csv))
+        .fallback_service(ServeDir::new("public")) 
         .with_state(activos);
 
     let direccion = format!("{}:{}", ip, puerto);
-    let listener = tokio::net::TcpListener::bind(&direccion).await.expect("Error: Puerto 3000 ocupado");
+    let listener = tokio::net::TcpListener::bind(&direccion).await.expect("Error: Puerto ocupado");
     
     axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }
@@ -63,14 +65,7 @@ async fn recibir_datos(
     format!("OK desde {}", ip_cliente)
 }
 
-async fn pagina_principal() -> impl IntoResponse {
-    // Buscamos el HTML en la raíz/public/index.html
-    match fs::read_to_string("./public/index.html") {
-        Ok(html) => Html(html),
-        Err(_) => Html("<h1>404: No se encontró public/index.html</h1>".to_string()),
-    }
-}
-
 async fn obtener_csv() -> impl IntoResponse {
     fs::read_to_string("./data/datos.csv").unwrap_or_default()
 }
+

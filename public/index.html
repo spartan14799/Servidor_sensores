@@ -1,275 +1,144 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Sensores</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        background-color: #f4f4f9;
-        padding: 20px;
-      }
-      .contenedor-graficas {
-        display: flex;
-        flex-direction: column;
-        gap: 40px;
-        align-items: center;
-      }
-      .tarjeta {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        width: 80%;
-        max-width: 800px;
-      }
-      .controles {
-        margin-bottom: 20px;
-        padding: 15px;
-        background: #e0e0e0;
-        border-radius: 8px;
-        display: inline-block;
-      }
-      input[type="date"] {
-        padding: 8px;
-        font-size: 16px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Monitoreo del Botón</h1>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centro de Monitoreo IoT</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-light">
 
-    <div class="controles">
-      <label for="fechaFiltro"><strong>Ver datos del día: </strong></label>
-      <input type="date" id="fechaFiltro" onchange="cargarDatos()" />
+  <div class="container-fluid">
+    <div class="row">
+      
+      <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar text-white collapse min-vh-100 p-3">
+        <div class="position-sticky">
+          <h4 class="text-center py-3 border-bottom border-secondary">
+            <i class="bi bi-cpu"></i> Servidor IoT
+          </h4>
+          <ul class="nav flex-column mt-4">
+            <li class="nav-item mb-2">
+              <button class="btn btn-outline-light w-100 text-start" onclick="cambiarVista('vista-rendimiento')">
+                <i class="bi bi-speedometer2 me-2"></i> Rendimiento Pi
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-outline-light w-100 text-start" onclick="cambiarVista('vista-sensores')">
+                <i class="bi bi-activity me-2"></i> Datos Sensores
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+        
+        <section id="vista-rendimiento" class="vista d-none">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Monitoreo del Sistema (Raspberry Pi)</h1>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title"><i class="bi bi-cpu"></i> Uso de CPU</h5>
+                  <h2 class="card-text">45%</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card text-white bg-success shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title"><i class="bi bi-memory"></i> Memoria RAM</h5>
+                  <h2 class="card-text">1.2 GB / 4 GB</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card text-white bg-danger shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title"><i class="bi bi-thermometer-half"></i> Temperatura</h5>
+                  <h2 class="card-text">55°C</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="vista-sensores" class="vista activa">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+            <h1 class="h2">Monitoreo de Sensores</h1>
+          </div>
+
+          <div class="card shadow-sm mb-4">
+            <div class="card-body bg-white rounded">
+              <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                  <label for="selectorSensor" class="form-label text-muted">Seleccionar Sensor</label>
+                  <select class="form-select" id="selectorSensor" onchange="procesarYGraficar()"></select>
+                </div>
+                <div class="col-md-6">
+                  <label for="fechaFiltro" class="form-label text-muted">Filtrar por Fecha</label>
+                  <input type="date" class="form-control" id="fechaFiltro" onchange="procesarYGraficar()" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row contenedor-graficas">
+            
+            <div class="col-12 mb-4">
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="card-title mb-0" id="tituloDiario">Pulsaciones por Hora</h5>
+                </div>
+                <div class="card-body">
+                  <div class="position-relative" style="height: 40vh;">
+                    <canvas id="chartDiario"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="card-title mb-0">Pulsaciones por Día (Mes Actual)</h5>
+                </div>
+                <div class="card-body">
+                  <div class="position-relative" style="height: 35vh;">
+                    <canvas id="chartMensual"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="card-title mb-0">Pulsaciones por Mes (Año Actual)</h5>
+                </div>
+                <div class="card-body">
+                  <div class="position-relative" style="height: 35vh;">
+                    <canvas id="chartAnual"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
     </div>
+  </div>
 
-    <div class="contenedor-graficas">
-      <div class="tarjeta">
-        <h3 id="tituloDiario">Pulsaciones por Hora</h3>
-        <canvas id="chartDiario"></canvas>
-      </div>
-
-      <div class="tarjeta">
-        <h3>Pulsaciones por Día (Mes Actual)</h3>
-        <canvas id="chartMensual"></canvas>
-      </div>
-
-      <div class="tarjeta">
-        <h3>Pulsaciones por Mes (Año Actual)</h3>
-        <canvas id="chartAnual"></canvas>
-      </div>
-    </div>
-
-    <script>
-      let chartDiario, chartMensual, chartAnual;
-
-      // Establecer la fecha de hoy por defecto al cargar la página
-      document.addEventListener("DOMContentLoaded", () => {
-        const hoy = new Date();
-        // Formatear a YYYY-MM-DD para el input type="date"
-        const anio = hoy.getFullYear();
-        const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-        const dia = String(hoy.getDate()).padStart(2, "0");
-        document.getElementById("fechaFiltro").value = `${anio}-${mes}-${dia}`;
-
-        cargarDatos();
-        // Auto-actualización cada 2 segundos
-        setInterval(cargarDatos, 2000);
-      });
-
-      async function cargarDatos() {
-        try {
-          const respuesta = await fetch("/api/datos");
-          const csv = await respuesta.text();
-          const lineas = csv.trim().split("\n").slice(1);
-
-          const ahora = new Date();
-          const mesActual = ahora.getMonth();
-          const anioActual = ahora.getFullYear();
-
-          // Obtener la fecha que el usuario seleccionó en el input
-          const fechaSeleccionada =
-            document.getElementById("fechaFiltro").value;
-
-          // Estructuras para agrupar nuestros datos
-          let conteoPorHora = new Array(24).fill(0); // Arreglo de 24 ceros (0 a 23 hrs)
-          let conteoPorDia = {};
-          let conteoPorMes = {};
-
-          const nombresMeses = [
-            "Ene",
-            "Feb",
-            "Mar",
-            "Abr",
-            "May",
-            "Jun",
-            "Jul",
-            "Ago",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dic",
-          ];
-
-          lineas.forEach((linea) => {
-            if (!linea) return;
-		const [timestamp, sensor, medicion, valorStr] = linea.split(",");
-            const valor = parseInt(valorStr);
-            const fecha = new Date(parseFloat(timestamp) * 1000);
-
-            // Formatear la fecha del CSV a YYYY-MM-DD para comparar con el filtro
-            const anioCSV = fecha.getFullYear();
-            const mesCSV = String(fecha.getMonth() + 1).padStart(2, "0");
-            const diaCSV = String(fecha.getDate()).padStart(2, "0");
-            const fechaCSVStr = `${anioCSV}-${mesCSV}-${diaCSV}`;
-
-            // Solo contamos pulsaciones (valor === 1)
-            if (valor === 1) {
-              // 1. Datos para la gráfica DIARIA (Agrupamos por hora si la fecha coincide con el filtro)
-              if (fechaCSVStr === fechaSeleccionada) {
-                const hora = fecha.getHours();
-                conteoPorHora[hora]++;
-              }
-
-              // 2. Datos para la gráfica MENSUAL (Agrupamos por día del mes actual)
-              if (
-                fecha.getMonth() === mesActual &&
-                fecha.getFullYear() === anioActual
-              ) {
-                const dia = fecha.getDate().toString();
-                conteoPorDia[dia] = (conteoPorDia[dia] || 0) + 1;
-              }
-
-              // 3. Datos para la gráfica ANUAL (Agrupamos por mes del año actual)
-              if (fecha.getFullYear() === anioActual) {
-                const nombreMes = nombresMeses[fecha.getMonth()];
-                conteoPorMes[nombreMes] = (conteoPorMes[nombreMes] || 0) + 1;
-              }
-            }
-          });
-
-          // Actualizar título de la gráfica diaria
-          document.getElementById("tituloDiario").innerText =
-            `Pulsaciones por Hora (${fechaSeleccionada})`;
-
-          dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes);
-        } catch (error) {
-          console.error("Error cargando los datos:", error);
-        }
-      }
-
-      function dibujarGraficas(conteoPorHora, conteoPorDia, conteoPorMes) {
-        // Etiquetas para las 24 horas del día (00:00, 01:00... 23:00)
-        const etiquetasHoras = Array.from(
-          { length: 24 },
-          (_, i) => `${String(i).padStart(2, "0")}:00`,
-        );
-
-        // --- GRÁFICA DIARIA POR HORA ---
-        if (chartDiario) {
-          chartDiario.data.labels = etiquetasHoras;
-          chartDiario.data.datasets[0].data = conteoPorHora;
-          chartDiario.update();
-        } else {
-          const ctxD = document.getElementById("chartDiario").getContext("2d");
-          chartDiario = new Chart(ctxD, {
-            type: "bar",
-            data: {
-              labels: etiquetasHoras,
-              datasets: [
-                {
-                  label: "Pulsaciones en la hora",
-                  data: conteoPorHora,
-                  backgroundColor: "#2196F3",
-                },
-              ],
-            },
-            options: {
-              animation: false,
-              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            },
-          });
-        }
-
-        // --- GRÁFICA MENSUAL ---
-        const etiquetasMes = Object.keys(conteoPorDia).sort((a, b) => a - b); // Ordenar días numéricamente
-        const datosMes = etiquetasMes.map((dia) => conteoPorDia[dia]);
-        if (chartMensual) {
-          chartMensual.data.labels = etiquetasMes;
-          chartMensual.data.datasets[0].data = datosMes;
-          chartMensual.update();
-        } else {
-          const ctxM = document.getElementById("chartMensual").getContext("2d");
-          chartMensual = new Chart(ctxM, {
-            type: "bar",
-            data: {
-              labels: etiquetasMes,
-              datasets: [
-                {
-                  label: "Pulsaciones en el día",
-                  data: datosMes,
-                  backgroundColor: "#4CAF50",
-                },
-              ],
-            },
-            options: {
-              animation: false,
-              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            },
-          });
-        }
-
-        // --- GRÁFICA ANUAL ---
-        const mesesOrdenados = [
-          "Ene",
-          "Feb",
-          "Mar",
-          "Abr",
-          "May",
-          "Jun",
-          "Jul",
-          "Ago",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dic",
-        ];
-        const etiquetasAnio = Object.keys(conteoPorMes).sort(
-          (a, b) => mesesOrdenados.indexOf(a) - mesesOrdenados.indexOf(b),
-        );
-        const datosAnio = etiquetasAnio.map((mes) => conteoPorMes[mes]);
-
-        if (chartAnual) {
-          chartAnual.data.labels = etiquetasAnio;
-          chartAnual.data.datasets[0].data = datosAnio;
-          chartAnual.update();
-        } else {
-          const ctxA = document.getElementById("chartAnual").getContext("2d");
-          chartAnual = new Chart(ctxA, {
-            type: "bar",
-            data: {
-              labels: etiquetasAnio,
-              datasets: [
-                {
-                  label: "Pulsaciones en el mes",
-                  data: datosAnio,
-                  backgroundColor: "#FF9800",
-                },
-              ],
-            },
-            options: {
-              animation: false,
-              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-            },
-          });
-        }
-      }
-    </script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
 </html>
