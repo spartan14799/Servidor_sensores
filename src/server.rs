@@ -10,8 +10,6 @@ use std::net::SocketAddr;
 use tower_http::services::ServeDir;
 use dotenvy::dotenv;
 use std::env;
-use std::sync::{Arc, Mutex};
-use std::collections::HashSet;
 
 #[derive(Deserialize, Debug)]
 pub struct DatosSensor {
@@ -33,10 +31,9 @@ pub struct RegistroDb {
 #[derive(Clone)]
 struct AppState {
     db: SqlitePool,
-    activos: Arc<Mutex<HashSet<String>>>,
 }
 
-pub async fn iniciar_servidor(activos: Arc<Mutex<HashSet<String>>>) {
+pub async fn iniciar_servidor() {
     let _ = dotenv();
     let ip = env::var("IP_SERVIDOR").unwrap_or_else(|_| "0.0.0.0".to_string());
     let puerto = env::var("PUERTO_SERVIDOR").unwrap_or_else(|_| "3000".to_string());
@@ -60,7 +57,7 @@ pub async fn iniciar_servidor(activos: Arc<Mutex<HashSet<String>>>) {
     ")
     .execute(&pool).await.unwrap();
 
-    let estado = AppState { db: pool, activos };
+    let estado = AppState { db: pool };
 
     let app = Router::new()
         .route("/datos", post(recibir_datos))
@@ -81,8 +78,6 @@ async fn recibir_datos(
     Json(payload): Json<DatosSensor>
 ) -> String {
     let ip_cliente = addr.ip().to_string();
-
-    estado.activos.lock().unwrap().insert(ip_cliente.clone());
 
     let _ = sqlx::query("INSERT INTO mediciones (timestamp, sensor, medicion, valor, ip_origen) VALUES (?, ?, ?, ?, ?)")
         .bind(payload.timestamp)
