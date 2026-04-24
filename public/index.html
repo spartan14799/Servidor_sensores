@@ -77,12 +77,20 @@
 
           <div class="card shadow-sm mb-4">
             <div class="card-body bg-white rounded">
-              <div class="row g-3 align-items-center">
-                <div class="col-md-6">
-                  <label for="selectorSensor" class="form-label text-muted">Seleccionar Sensor</label>
-                  <select class="form-select" id="selectorSensor" onchange="procesarYGraficar()"></select>
+              <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                  <label for="selectorDispositivo" class="form-label text-muted">Dispositivo (IP/Nodo)</label>
+                  <select class="form-select" id="selectorDispositivo" onchange="actualizarSensores()"></select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-3">
+                  <label for="selectorSensor" class="form-label text-muted">Sensor</label>
+                  <select class="form-select" id="selectorSensor" onchange="actualizarMedidas()"></select>
+                </div>
+                <div class="col-md-3">
+                  <label for="selectorMedida" class="form-label text-muted">Tipo de Medida</label>
+                  <select class="form-select" id="selectorMedida" onchange="procesarYGraficar()"></select>
+                </div>
+                <div class="col-md-3">
                   <label for="fechaFiltro" class="form-label text-muted">Filtrar por Fecha</label>
                   <input type="date" class="form-control" id="fechaFiltro" onchange="procesarYGraficar()" />
                 </div>
@@ -90,48 +98,9 @@
             </div>
           </div>
 
-          <div class="row contenedor-graficas">
-            
-            <div class="col-12 mb-4">
-              <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                  <h5 class="card-title mb-0" id="tituloDiario">Pulsaciones por Hora</h5>
-                </div>
-                <div class="card-body">
-                  <div class="position-relative" style="height: 40vh;">
-                    <canvas id="chartDiario"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="row" id="contenedor-graficas-dinamico">
+             </div>
 
-            <div class="col-md-6 mb-4">
-              <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                  <h5 class="card-title mb-0">Pulsaciones por Día (Mes Actual)</h5>
-                </div>
-                <div class="card-body">
-                  <div class="position-relative" style="height: 35vh;">
-                    <canvas id="chartMensual"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-md-6 mb-4">
-              <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                  <h5 class="card-title mb-0">Pulsaciones por Mes (Año Actual)</h5>
-                </div>
-                <div class="card-body">
-                  <div class="position-relative" style="height: 35vh;">
-                    <canvas id="chartAnual"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
         </section>
 
       </main>
