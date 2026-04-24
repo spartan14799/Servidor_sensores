@@ -29,7 +29,7 @@ class SensorLuz(SensorBase):
                 
                 nivel_luz = ((datos[0] << 8) | datos[1]) / 1.2
                 
-                self.enviar_dato("Luminosidad", round(nivel_luz, 2))
+                self.enviar_dato("luminosidad", round(nivel_luz, 2))
                 
             except Exception as e:
                 print(f"[{self.id_sensor}] Error de lectura I2C: {e}")
